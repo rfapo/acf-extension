@@ -18,7 +18,7 @@
 % Licensed under the Simplified BSD License [see external/bsd.txt]
 
 %% extract training and testing images and ground truth
-dataDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data-USA';
+dataDir = 'D:\code\research\detectorAcf\data\Caltech\';
 for s=1:2
   if(s==1), type='train'; else type='test'; end
   if(exist([dataDir type '/annotations'],'dir')), continue; end
@@ -26,44 +26,23 @@ for s=1:2
 end
 
 %% set up opts for training detector (see acfTrain)
-opts=acfTrain(); 
-%model parameters
-opts.modelDs=[50 20.5]; 
-opts.modelDsPad=[128 64];
-opts.stride = 4;
-opts.nWeak=[32 128 512 2048];
-opts.pBoost.pTree.fracFtrs=1/16;
-
-%features parameters
-opts.pPyramid.smooth=.5; 
-opts.pPyramid.pChns.pColor.smooth=0;
-opts.pPyramid.nPerOct = 8;
-
-%Custom channel
-opts.pPyramid.pChns.pCustom=struct('name','hogentropy','hFunc',@HOGEntropy); 
-opts.pPyramid.pChns.complete=0;
-
- 
- 
-%training data parameters
-opts.posGtDir=[dataDir 'train/annotations']; 
-opts.posImgDir=[dataDir 'train/images']; 
-opts.pJitter=struct('flip',1);
-opts.name='models/AcfCaltech';
+opts=acfTrain(); opts.modelDs=[50 20.5]; opts.modelDsPad=[64 32];
+opts.pPyramid.smooth=.5; opts.pPyramid.pChns.pColor.smooth=0;
+opts.posGtDir=[dataDir 'train/annotations']; opts.nWeak=[32 128 512 2048];
+opts.posImgDir=[dataDir 'train/images']; opts.pJitter=struct('flip',1);
+opts.pBoost.pTree.fracFtrs=1/16; opts.name='models/AcfCaltech';
 pLoad={'lbls',{'person'},'ilbls',{'people'},'squarify',{3,.41}};
-opts.pLoad = [pLoad 'hRng',[50 inf], 'vRng',[0.65 1] ];
-opts.pJitter = {[]};
-opts.winsSave = 1;
+opts.pLoad = [pLoad 'hRng',[50 inf], 'vRng',[1 1] ];
 
 %% train detector (see acfTrain)
 detector = acfTrain( opts );
 
 %% modify detector (see acfModify)
-%detector = acfModify(detector,'cascThr',-1,'cascCal',-.005);
+detector = acfModify(detector,'cascThr',-1,'cascCal',-.005);
 
 %% run detector on a sample image (see acfDetect)
 imgNms=bbGt('getFiles',{[dataDir 'test/images']});
-I=imread(imgNms{1864}); tic, bbs=acfDetect(I,detector); toc
+I=imread(imgNms{1862}); tic, bbs=acfDetect(I,detector); toc
 figure(1); im(I); bbApply('draw',bbs); pause(.1);
 
 %% test detector and plot roc (see acfTest)
