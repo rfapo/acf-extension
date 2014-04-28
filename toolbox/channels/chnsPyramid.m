@@ -1,4 +1,4 @@
-function pyramid = chnsPyramid( I, varargin )
+function pyramid = chnsPyramid( I, Bb, FN, varargin )
 % Compute channel feature pyramid given an input image.
 %
 % While chnsCompute() computes channel features at a single scale,
@@ -113,12 +113,12 @@ function pyramid = chnsPyramid( I, varargin )
 % Licensed under the Simplified BSD License [see external/bsd.txt]
 
 % get default parameters pPyramid
-if(nargin==2), p=varargin{1}; else p=[]; end
+if(nargin==4), p=varargin{1}; else p=[]; end
 if( ~isfield(p,'complete') || p.complete~=1 || isempty(I) )
   dfs={ 'pChns',{}, 'nPerOct',8, 'nOctUp',0, 'nApprox',-1, ...
     'lambdas',[], 'pad',[0 0], 'minDs',[16 16], ...
     'smooth',1, 'concat',1, 'complete',1 };
-  p=getPrmDflt(varargin,dfs,1); chns=chnsCompute([],p.pChns);
+  p=getPrmDflt(varargin,dfs,1); chns=chnsCompute([],[],[],p.pChns);
   p.pChns=chns.pChns; p.pChns.complete=1; shrink=p.pChns.shrink;
   p.pad=round(p.pad/shrink)*shrink; p.minDs=max(p.minDs,shrink*4);
   if(p.nApprox<0), p.nApprox=p.nPerOct-1; end
@@ -146,7 +146,7 @@ for i=isR
   s=scales(i); sz1=round(sz*s/shrink)*shrink;
   if(all(sz==sz1)), I1=I; else I1=imResampleMex(I,sz1(1),sz1(2),1); end
   if(s==.5 && (nApprox>0 || nPerOct==1)), I=I1; end
-  chns=chnsCompute(I1,pChns); info=chns.info;
+  chns=chnsCompute(I1,Bb,FN,pChns,sz); info=chns.info; %obs: chnage after
   if(i==isR(1)), nTypes=chns.nTypes; data=cell(nScales,nTypes); end
   data(i,:) = chns.data;
 end

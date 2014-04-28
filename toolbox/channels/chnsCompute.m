@@ -1,4 +1,4 @@
-function chns = chnsCompute( I, varargin )
+function chns = chnsCompute( I, Bb, FN, varargin )
 % Compute channel features at a single scale given an input image.
 %
 % Compute the channel features as described in:
@@ -86,7 +86,14 @@ function chns = chnsCompute( I, varargin )
 %     .pFunc        - [{}] additional params for chns=hFunc(I,pFunc{:})
 %     .padWith      - [0] how channel should be padded (e.g. 0,'replicate')
 %   .complete     - [] if true does not check/set default vals in pChns
-%
+%   obs: added by me
+%   .pSeq         - parameters for seq image channels (optional struct array):
+%     .enabled      - [1] if true enable custom channel type
+%     .name         - ['REQ'] custom channel type name
+%     .hFunc        - ['REQ'] function handle for computing custom channels
+%     .pFunc        - [{}] additional params for chns=hFunc(I,pFunc{:})
+%     .padWith      - [0] how channel should be padded (e.g. 0,'replicate')
+
 % OUTPUTS
 %  chns       - output struct
 %   .pChns      - exact input parameters used
@@ -118,11 +125,11 @@ function chns = chnsCompute( I, varargin )
 % Licensed under the Simplified BSD License [see external/bsd.txt]
 
 % get default parameters pChns
-if(nargin==2), pChns=varargin{1}; else pChns=[]; end
+if(nargin==4), pChns=varargin{1}; else pChns=[]; end
 if( ~isfield(pChns,'complete') || pChns.complete~=1 || isempty(I) )
   p=struct('enabled',{},'name',{},'hFunc',{},'pFunc',{},'padWith',{});
-  pChns = getPrmDflt(varargin,{'shrink',4,'pColor',{},'pGradMag',{},...
-    'pGradHist',{},'pCustom',p,'complete',1},1);
+  pChns = getPrmDflt(varargin{1},{'shrink',4,'pColor',{},'pGradMag',{},...
+    'pGradHist',{},'pCustom',p,'pSeq',p,'complete',1},1);
   pChns.pColor = getPrmDflt( pChns.pColor, {'enabled',1,...
     'smooth',1, 'colorSpace','luv'}, 1 );
   pChns.pGradMag = getPrmDflt( pChns.pGradMag, {'enabled',1,...
@@ -133,6 +140,11 @@ if( ~isfield(pChns,'complete') || pChns.complete~=1 || isempty(I) )
   for i=1:nc, pc{i} = getPrmDflt( pChns.pCustom(i), {'enabled',1,...
       'name','REQ','hFunc','REQ','pFunc',{},'padWith',0}, 1 ); end
   if( nc>0 ), pChns.pCustom=[pc{:}]; end
+  %byme
+  nseq = length(pChns.pSeq); ps=cell(1,nseq);
+  for i=1:nseq, ps{i} = getPrmDflt( pChns.pSeq(i), {'enabled',1,...
+      'name','REQ','hFunc','REQ','pFunc',{},'padWith',0}, 1 ); end
+  if( nseq>0 ), pChns.pSeq=[ps{:}]; end
 end
 if(nargin==0), chns=pChns; return; end
 
@@ -166,6 +178,14 @@ if( p.enabled )
   binSize=p.binSize; if(isempty(binSize)), binSize=shrink; end
   H=gradientHist(M,O,binSize,p.nOrients,p.softBin,p.useHog,p.clipHog,full);
   chns=addChn(chns,H,nm,pChns.pGradHist,0,h,w);
+end
+
+%compute seq image channels
+p=pChns.pSeq;
+for i=find( [p.enabled] )
+  %TODO: add resize parameters varargin{2}
+  S=feval(p(i).hFunc,I,Bb,FN,p(i).pFunc{:});
+  chns=addChn(chns,S,p(i).name,p(i),p(i).padWith,h,w);
 end
 
 % compute custom channels

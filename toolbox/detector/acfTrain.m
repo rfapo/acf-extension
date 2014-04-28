@@ -128,34 +128,38 @@ for stage = 0:numel(opts.nWeak)-1
   diary('on'); fprintf([repmat('-',[1 75]) '\n']);
   fprintf('Training stage %i\n',stage); startStage=clock;
   
-  seqdata{3}.file = 'casa3';
-  seqdata{3}.bbs = [3 3 3 3 0; 3 3 3 3 0];
   % sample positives and compute features
   if( stage==0 )
-    Is1 = sampleWins( detector, stage, 1 );
-    X1 = chnsCompute1( Is1, opts );
+    [Is1, Bbs1, FNm1] = sampleWins( detector, stage, 1 );
+    X1 = chnsCompute1( Is1, opts,  Bbs1, FNm1);
     X1 = reshape(X1,[],size(X1,4))';
   end
   
   % compute info about channels
   if( stage==0 )
     t=ndims(Is1); if(t==3), t=Is1(:,:,1); else t=Is1(:,:,:,1); end
-    t=chnsCompute(t,opts.pPyramid.pChns); detector.info=t.info;
+    t=chnsCompute(t,[],[],opts.pPyramid.pChns); detector.info=t.info;
   end
   
   % compute lambdas
   if( stage==0 && isempty(opts.pPyramid.lambdas) )
     fprintf('Computing lambdas... '); start=clock;
     ds=size(Is1); ds(1:end-1)=1; Is1=mat2cell2(Is1,ds);
-    ls=chnsScaling(opts.pPyramid.pChns,Is1,0);
+    dsBbs=size(Bbs1); dsBbs(1:end-1)=1; Bbs1=mat2cell2(Bbs1,dsBbs);
+    dsFn=size(FNm1); dsFn(1:end-1)=1; FNm1=mat2cell2(FNm1,dsFn);
+    ls=chnsScaling(opts.pPyramid.pChns,Is1,Bbs1,FNm1,0);
     ls=round(ls*10^5)/10^5; detector.opts.pPyramid.lambdas=ls;
     fprintf('done (time=%.0fs).\n',etime(clock,start));
-  end; clear Is1 ls;
+  end; clear Is1 Bbs1 FNm1 ls;
   
   % sample negatives and compute features
-  Is0 = sampleWins( detector, stage, 0 );
-  X0 = chnsCompute1( Is0, opts ); clear Is0;
+  [Is0,Bbs0 ,FNm0] = sampleWins( detector, stage, 0 );
+  X0 = chnsCompute1( Is0, opts, Bbs0 ,FNm0); clear Is0 Bbs0 FNm0;
   X0 = reshape(X0,[],size(X0,4))';
+  
+  %Is0 = sampleWins( detector, stage, 0 );
+  %X0 = chnsCompute1( Is0, opts ); clear Is0;
+  %X0 = reshape(X0,[],size(X0,4))';
   
   % accumulate negatives from previous stages
   if( stage>0 )
@@ -194,11 +198,11 @@ dfs= { 'pPyramid',{}, 'modelDs',[100 41], 'modelDsPad',[128 64], ...
   'nPerNeg',25, 'nAccNeg',10000, 'pJitter',{}, 'winsSave',0 };
 opts = getPrmDflt(varargin,dfs,1);
 % fill in remaining parameters
-p=chnsPyramid([],opts.pPyramid); p=p.pPyramid;
+p=chnsPyramid([],[],[],opts.pPyramid); p=p.pPyramid;
 p.minDs=opts.modelDs; shrink=p.pChns.shrink;
 opts.modelDsPad=ceil(opts.modelDsPad/shrink)*shrink;
 p.pad=ceil((opts.modelDsPad-opts.modelDs)/shrink/2)*shrink;
-p=chnsPyramid([],p); p=p.pPyramid; p.complete=1;
+p=chnsPyramid([],[],[],p); p=p.pPyramid; p.complete=1;
 p.pChns.complete=1; opts.pPyramid=p;
 % initialize pNms, pBoost, pBoost.pTree, and pLoad
 dfs={ 'type','maxg', 'overlap',.65, 'ovrDnm','min' };
@@ -211,7 +215,7 @@ opts.pLoad=getPrmDflt(opts.pLoad,{'squarify',{0,1}},-1);
 opts.pLoad.squarify{2}=opts.modelDs(2)/opts.modelDs(1);
 end
 
-function Is = sampleWins( detector, stage, positive )
+function [Is,Bbs ,FNm] = sampleWins( detector, stage, positive )
 % Load or sample windows for training detector.
 opts=detector.opts; start=clock;
 if( positive ), n=opts.nPos; else n=opts.nNeg; end
@@ -227,31 +231,40 @@ else
   hasGt=positive||isempty(opts.negImgDir); fs={opts.negImgDir};
   if(hasGt), fs={opts.posImgDir,opts.posGtDir}; end
   fs=bbGt('getFiles',fs); nImg=size(fs,2); assert(nImg>0);
-  if(~isinf(n)), fs=fs(:,randperm(nImg)); end; Is=cell(nImg*1000,1);
+  if(~isinf(n)), fs=fs(:,randperm(nImg)); end; 
+  Is=cell(nImg*1000,1); Bbs=cell(nImg*1000,1); FNm=cell(nImg*1000,1);
   tid=ticStatus('Sampling windows',1,30); k=0; i=0; batch=64;
   while( i<nImg && k<n )
-    batch=min(batch,nImg-i); Is1=cell(1,batch);
+    batch=min(batch,nImg-i); 
+    Is1=cell(1,batch); Bbs1=cell(1, batch); FNm1 = cell(1,batch); 
     parfor j=1:batch, ij=i+j;
       I = feval(opts.imreadf,fs{1,ij},opts.imreadp{:}); %#ok<PFBNS>
       gt=[]; if(hasGt), [~,gt]=bbGt('bbLoad',fs{2,ij},opts.pLoad); end
-      Is1{j} = sampleWins1( I, gt, detector, stage, positive );
+      [Is1{j}, Bbs1{j}] = sampleWins1( I, gt, detector, stage, positive );
+      FNm1{j} = repmat({fs{1,ij}},1,length(Is1{j}));   
     end
-    Is1=[Is1{:}]; k1=length(Is1); Is(k+1:k+k1)=Is1; k=k+k1;
-    if(k>n), Is=Is(randSample(k,n)); k=n; end
+    Is1=[Is1{:}]; Bbs1 = [Bbs1{:}]; FNm1 = [FNm1{:}];
+    k1=length(Is1); Is(k+1:k+k1)=Is1; Bbs(k+1:k+k1)=Bbs1; FNm(k+1:k+k1)=FNm1; k=k+k1;
+    if(k>n), rs = randSample(k,n);  Is=Is(rs); Bbs=Bbs(rs); FNm=FNm(rs); k=n; end
     i=i+batch; tocStatus(tid,max(i/nImg,k/n));
   end
-  Is=Is(1:k); fprintf('Sampled %i windows from %i images.\n',k,i);
+  Is=Is(1:k); Bbs=Bbs(1:k); FNm=FNm(1:k); fprintf('Sampled %i windows from %i images.\n',k,i);
 end
-% optionally jitter positive windows
-if(length(Is)<2), Is={}; return; end
-nd=ndims(Is{1})+1; Is=cat(nd,Is{:});
-if( positive && isstruct(opts.pJitter) )
+% optionally jitter positive windows,  obs never jiter in this new approach
+if(length(Is)<2), Is={}; Bbs={}; FNm={}; return; end
+nd=ndims(Is{1})+1; Is=cat(nd,Is{:}); 
+ndbbs=ndims(Bbs{1})+1; Bbs=cat(ndbbs,Bbs{:});
+ndfnm = ndims(FNm{1})+1; FNm=cat(ndfnm,FNm{:}); 
+if( positive && isstruct(opts.pJitter) ) %never get in this case
   opts.pJitter.hasChn=(nd==4); Is=jitterImage(Is,opts.pJitter);
   ds=size(Is); ds(nd)=ds(nd)*ds(nd+1); Is=reshape(Is,ds(1:nd));
 end
 % make sure dims are divisible by shrink and not smaller than modelDsPad
 ds=size(Is); cr=rem(ds(1:2),opts.pPyramid.pChns.shrink); s=floor(cr/2)+1;
 e=ceil(cr/2); Is=Is(s(1):end-e(1),s(2):end-e(2),:,:); ds=size(Is);
+%*******obs: if change the shirink should cut from bsb
+Bbs(1,2,:)=Bbs(1,2,:)+s(1); Bbs(1,4,:)=Bbs(1,4,:)-e(1); 
+Bbs(1,1,:)=Bbs(1,1,:)+ s(2); Bbs(1,3,:)=Bbs(1,3,:) - e(2);
 if(any(ds(1:2)<opts.modelDsPad)), error('Windows too small.'); end
 % optionally save windows to disk and update log
 nm=[opts.name 'Is' int2str(positive) 'Stage' int2str(stage)];
@@ -259,7 +272,7 @@ if( opts.winsSave ), save(nm,'Is','-v7.3'); end
 fprintf('Done sampling windows (time=%.0fs).\n',etime(clock,start));
 end
 
-function Is = sampleWins1( I, gt, detector, stage, positive )
+function [Is, bbs] = sampleWins1( I, gt, detector, stage, positive )
 % Sample windows from I given its ground truth gt.
 opts=detector.opts; shrink=opts.pPyramid.pChns.shrink;
 modelDs=opts.modelDs; modelDsPad=opts.modelDsPad;
@@ -287,17 +300,21 @@ modelDsBig=max(8*shrink,modelDsPad)+max(2,ceil(64/shrink))*shrink;
 r=modelDs(2)/modelDs(1); assert(all(abs(bbs(:,3)./bbs(:,4)-r)<1e-5));
 r=modelDsBig./modelDs; bbs=bbApply('resize',bbs,r(1),r(2));
 Is=bbApply('crop',I,bbs,'replicate',modelDsBig([2 1]));
+bbs = mat2cell(bbs,ones(1,size(bbs,1)),size(bbs,2))';
 end
 
-function chns = chnsCompute1( Is, opts )
+function chns = chnsCompute1( Is, opts, Bbs, FNm )
 % Compute single scale channels of dimensions modelDsPad.
 if(isempty(Is)), chns=[]; return; end
 fprintf('Extracting features... '); start=clock;
 pChns=opts.pPyramid.pChns; smooth=opts.pPyramid.smooth;
-dsTar=opts.modelDsPad/pChns.shrink; ds=size(Is); ds(1:end-1)=1;
-Is=squeeze(mat2cell2(Is,ds)); n=length(Is); chns=cell(1,n);
+dsTar=opts.modelDsPad/pChns.shrink; 
+ds=size(Is); ds(1:end-1)=1; Is=squeeze(mat2cell2(Is,ds)); 
+dsBbs = size(Bbs); dsBbs(1:end-1) = 1; Bbs=squeeze(mat2cell2(Bbs,dsBbs));
+dsFNm = size(FNm); dsFNm(1:end-1) = 1; FNm=squeeze(mat2cell2(FNm,dsFNm));
+n=length(Is); chns=cell(1,n);
 parfor i=1:n
-  C=chnsCompute(Is{i},pChns); C=convTri(cat(3,C.data{:}),smooth);
+  C=chnsCompute(Is{i},Bbs{i},FNm{i},pChns); C=convTri(cat(3,C.data{:}),smooth);
   ds=size(C); cr=ds(1:2)-dsTar; s=floor(cr/2)+1; e=ceil(cr/2);
   C=C(s(1):end-e(1),s(2):end-e(2),:); chns{i}=C;
 end; chns=cat(4,chns{:});

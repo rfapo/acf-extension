@@ -1,4 +1,4 @@
-function [lambdas,as,scales,fs] = chnsScaling( pChns, Is, show )
+function [lambdas,as,scales,fs] = chnsScaling( pChns, Is, Bbs, FNm, show )
 % Compute lambdas for channel power law scaling.
 %
 % For a broad family of features, including gradient histograms and all
@@ -50,7 +50,7 @@ function [lambdas,as,scales,fs] = chnsScaling( pChns, Is, show )
 % Licensed under the Simplified BSD License [see external/bsd.txt]
 
 % get additional input arguments
-if(nargin<3 || isempty(show)), show=1; end
+if(nargin<5 || isempty(show)), show=1; end
 
 % construct pPyramid (don't pad, concat or appoximate)
 pPyramid=chnsPyramid(); pPyramid.pChns=pChns; pPyramid.concat=0;
@@ -64,9 +64,9 @@ ds=round(ds/pChns.shrink)*pChns.shrink;
 for i=1:nImages, Is{i}=Is{i}(1:ds(1),1:ds(2),:); end
 
 % compute fs [nImages x nScales x nTypes] array of feature means
-P=chnsPyramid(Is{1},pPyramid); scales=P.scales'; info=P.info;
+P=chnsPyramid(Is{1},Bbs{1},FNm{1},pPyramid); scales=P.scales'; info=P.info;
 nScales=P.nScales; nTypes=P.nTypes; fs=zeros(nImages,nScales,nTypes);
-parfor i=1:nImages, P=chnsPyramid(Is{i},pPyramid); for j=1:nScales
+parfor i=1:nImages, P=chnsPyramid(Is{i},Bbs{i},FNm{i},pPyramid); for j=1:nScales
     for k=1:nTypes, fs(i,j,k)=mean(P.data{j,k}(:)); end; end; end
 
 % remove fs with fs(:,1,:) having small values
