@@ -46,7 +46,7 @@ if(reapply || ~exist(bbsNm,'file'))
   detector = load([name 'Detector.mat']);
   detector = detector.detector;
   imgNms = bbGt('getFiles',{imgDir});
-  acfDetect( imgNms, detector, bbsNm );
+  acfDetect( imgNms, imgNms,detector, bbsNm );
 end
 
 % run evaluation using bbGt

@@ -1,4 +1,4 @@
-function bbs = acfDetect( I, detector, fileName )
+function bbs = acfDetect( I, fn, detector, fileName )
 % Run aggregate channel features object detector on given image(s).
 %
 % The input 'I' can either be a single image (or filename) or a cell array
@@ -37,11 +37,11 @@ function bbs = acfDetect( I, detector, fileName )
 % Licensed under the Simplified BSD License [see external/bsd.txt]
 
 % run detector on every image
-if(nargin<3), fileName=''; end; multiple=iscell(I);
+if(nargin<4), fileName=''; end; multiple=iscell(I);
 if(~isempty(fileName) && exist(fileName,'file')), bbs=1; return; end
-if(~multiple), bbs=acfDetectImg(I,detector); else
+if(~multiple), bbs=acfDetectImg(I, fn, detector); else
   n=length(I); bbs=cell(n,1);
-  parfor i=1:n, bbs{i}=acfDetectImg(I{i},detector); end
+  parfor i=1:n, bbs{i}=acfDetectImg(I{i}, fn{i}, detector); end
 end
 
 % write results to disk if fileName specified
@@ -55,7 +55,7 @@ dlmwrite(fileName,bbs); bbs=1;
 
 end
 
-function bbs = acfDetectImg( I, detector )
+function bbs = acfDetectImg( I, fn, detector )
 % Run trained sliding-window object detector on given image.
 Ds=detector; if(~iscell(Ds)), Ds={Ds}; end; nDs=length(Ds);
 opts=Ds{1}.opts; pPyramid=opts.pPyramid; pNms=opts.pNms;
@@ -64,7 +64,7 @@ shrink=pPyramid.pChns.shrink; pad=pPyramid.pad;
 separate=nDs>1 && isfield(pNms,'separate') && pNms.separate;
 % perform actual computations
 if(all(ischar(I))), I=feval(imreadf,I,imreadp{:}); end
-P = chnsPyramid(I,pPyramid); bbs = cell(P.nScales,nDs);
+P = chnsPyramid(I,[],fn,pPyramid); bbs = cell(P.nScales,nDs);
 for i=1:P.nScales
   for j=1:nDs, opts=Ds{j}.opts;
     modelDsPad=opts.modelDsPad; modelDs=opts.modelDs;

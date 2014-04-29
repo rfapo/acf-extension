@@ -93,6 +93,11 @@ function chns = chnsCompute( I, Bb, FN, varargin )
 %     .hFunc        - ['REQ'] function handle for computing custom channels
 %     .pFunc        - [{}] additional params for chns=hFunc(I,pFunc{:})
 %     .padWith      - [0] how channel should be padded (e.g. 0,'replicate')
+%     .span         - [4] how many previous frames
+%     .skip         - [2] how many frames skip
+%     .imgBaseDir   - [base] folder containing full data set images 
+%     .modelDs      -  model height+width without padding (eg [100 41])
+%     .modelDsPad   -  model height+width with padding (eg [128 64])
 
 % OUTPUTS
 %  chns       - output struct
@@ -143,7 +148,10 @@ if( ~isfield(pChns,'complete') || pChns.complete~=1 || isempty(I) )
   %byme
   nseq = length(pChns.pSeq); ps=cell(1,nseq);
   for i=1:nseq, ps{i} = getPrmDflt( pChns.pSeq(i), {'enabled',1,...
-      'name','REQ','hFunc','REQ','pFunc',{},'padWith',0}, 1 ); end
+      'name','REQ','hFunc','REQ','pFunc',{},'padWith',0,... 
+      'span', 8, 'skip', 2, 'imgBaseDir','REQ', ... 
+      'modelDs', [], 'modelDsPad', [] }, 1 ); 
+  end;
   if( nseq>0 ), pChns.pSeq=[ps{:}]; end
 end
 if(nargin==0), chns=pChns; return; end
@@ -181,10 +189,13 @@ if( p.enabled )
 end
 
 %compute seq image channels
-p=pChns.pSeq;
+p=pChns.pSeq; sh
 for i=find( [p.enabled] )
+  Is = computeSeqImg(I,Bb,Fn,sz,shrink,p);
+  S=feval(p(i).hFunc,Is,p(i).pFunc{:});
   %TODO: add resize parameters varargin{2}
-  S=feval(p(i).hFunc,I,Bb,FN,p(i).pFunc{:});
+  %TODO: add the handle for full image or windows (with bb or without bb)
+  %S=feval(p(i).hFunc,I,Bb,FN,sz,p(i).pFunc{:});
   chns=addChn(chns,S,p(i).name,p(i),p(i).padWith,h,w);
 end
 
@@ -206,3 +217,32 @@ chns.data{end+1}=data; chns.nTypes=chns.nTypes+1;
 chns.info(end+1)=struct('name',name,'pChn',pChn,...
   'nChns',size(data,3),'padWith',padWith);
 end
+
+function Is = computeSeqImg(I, Bb, Fn, sz, shrink,p)
+
+%compute the path for the images
+fnp = strsplit(Fn,'/'); fnp = fnp(end); fnp = strsplit(fnp, '_') ; 
+[tokens,~] = regexp(fnp(3),'I(\d+)\.jpg','tokens','match'); imgIdx = str2double(tokens{1});
+basePath = [p.imgBaseDir '/images' '/' fnp(1) '/' fnp(2) '/']; 
+
+%fill the list of images
+Is = cell(1,p.span + 1); imgFn = [basePath fnp(:)]; Is{1} = imread(imgFn);
+for sp=2:(p.span+1)
+    imgIdx=imgIdx-p.skip; imgFn = [basePath 'I' num2str( imgIdx, '%0.5d') '.jpg'];
+    if(exist(imgFn,'file')), Im = imread(imgFn); else break; end;
+    if(~isempty(Bb))
+        % grow bbs to a large padded size and crop windows
+        modelDsBig=max(8*shrink,p.modelDsPad)+max(2,ceil(64/shrink))*shrink;
+        r=p.modelDs(2)/p.modelDs(1); assert(all(abs(Bb(1,3)./Bb(1,4)-r)<1e-5));
+        r=modelDsBig./p.modelDs; Bb=bbApply('resize',Bb,r(1),r(2));
+        Ws=bbApply('crop',Im,Bb,'replicate',modelDsBig([2 1])); Im = Ws{1};        
+    end;
+    %compute other scale
+    if(~isempty(sz)), Im = imResampleMex(Im,sz(1),sz(2),1); end;
+    Is{sp} = Im;
+end;
+Is = [Is{:}];
+end
+
+
+

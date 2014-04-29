@@ -240,7 +240,7 @@ else
     parfor j=1:batch, ij=i+j;
       I = feval(opts.imreadf,fs{1,ij},opts.imreadp{:}); %#ok<PFBNS>
       gt=[]; if(hasGt), [~,gt]=bbGt('bbLoad',fs{2,ij},opts.pLoad); end
-      [Is1{j}, Bbs1{j}] = sampleWins1( I, gt, detector, stage, positive );
+      [Is1{j}, Bbs1{j}] = sampleWins1( I, gt, detector, stage, positive, fs{1,ij});
       FNm1{j} = repmat({fs{1,ij}},1,length(Is1{j}));   
     end
     Is1=[Is1{:}]; Bbs1 = [Bbs1{:}]; FNm1 = [FNm1{:}];
@@ -272,7 +272,7 @@ if( opts.winsSave ), save(nm,'Is','-v7.3'); end
 fprintf('Done sampling windows (time=%.0fs).\n',etime(clock,start));
 end
 
-function [Is, bbs] = sampleWins1( I, gt, detector, stage, positive )
+function [Is, bbs] = sampleWins1( I, gt, detector, stage, positive, fn )
 % Sample windows from I given its ground truth gt.
 opts=detector.opts; shrink=opts.pPyramid.pChns.shrink;
 modelDs=opts.modelDs; modelDsPad=opts.modelDsPad;
@@ -285,7 +285,7 @@ if( positive ), bbs=gt; bbs=bbs(bbs(:,5)==0,:); else
     bbs=[xs(:) ys(:)]; bbs(:,3)=w1; bbs(:,4)=h1; bbs=bbs(1:n,:);
   else
     % run detector to generate candidate bounding boxes
-    bbs=acfDetect(I,detector); [~,ord]=sort(bbs(:,5),'descend');
+    bbs=acfDetect(I,fn ,detector); [~,ord]=sort(bbs(:,5),'descend');
     bbs=bbs(ord(1:min(end,opts.nPerNeg)),1:4);
   end
   if( ~isempty(gt) )

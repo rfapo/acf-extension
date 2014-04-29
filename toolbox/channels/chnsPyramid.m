@@ -146,7 +146,7 @@ for i=isR
   s=scales(i); sz1=round(sz*s/shrink)*shrink;
   if(all(sz==sz1)), I1=I; else I1=imResampleMex(I,sz1(1),sz1(2),1); end
   if(s==.5 && (nApprox>0 || nPerOct==1)), I=I1; end
-  chns=chnsCompute(I1,Bb,FN,pChns,sz); info=chns.info; %obs: chnage after
+  chns=chnsCompute(I1,Bb,FN,pChns,sz1); info=chns.info; %obs: chnage after
   if(i==isR(1)), nTypes=chns.nTypes; data=cell(nScales,nTypes); end
   data(i,:) = chns.data;
 end

@@ -43,7 +43,13 @@ opts.pPyramid.nPerOct = 8;
 opts.pPyramid.pChns.pCustom=struct('name','hogentropy','hFunc',@HOGEntropy); 
 opts.pPyramid.pChns.complete=0;
 
- 
+%seq channel
+opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
+opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
+opts.pPyramid.pChns.pSeq = struct('name', 'seq', 'hFunc', @WSDST_MF,'pFunc',[16]);
+opts.pPyramid.pChns.pSeq.skip = 2; opts.pPyramid.pChns.pSeq.span = 8;
+opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
+
  
 %training data parameters
 opts.posGtDir=[dataDir 'train/annotations']; 
@@ -63,7 +69,7 @@ detector = acfTrain( opts );
 
 %% run detector on a sample image (see acfDetect)
 imgNms=bbGt('getFiles',{[dataDir 'test/images']});
-I=imread(imgNms{1864}); tic, bbs=acfDetect(I,detector); toc
+I=imread(imgNms{1864}); fn = imgNms{1864}; tic, bbs=acfDetect(I, fn, detector); toc
 figure(1); im(I); bbApply('draw',bbs); pause(.1);
 
 %% test detector and plot roc (see acfTest)
