@@ -189,10 +189,12 @@ if( p.enabled )
 end
 
 %compute seq image channels
-p=pChns.pSeq; sh
+p=pChns.pSeq; 
 for i=find( [p.enabled] )
-  Is = computeSeqImg(I,Bb,Fn,sz,shrink,p);
+  if(numel(varargin)>1 && ~isempty(varargin{2})), sz = varargin{2}; else sz = []; end; 
+  Is = computeSeqImg(I,Bb,FN,sz,shrink,p);
   S=feval(p(i).hFunc,Is,p(i).pFunc{:});
+  if(isempty(S)), S = single.empty(0,0,p.span); end;
   %TODO: add resize parameters varargin{2}
   %TODO: add the handle for full image or windows (with bb or without bb)
   %S=feval(p(i).hFunc,I,Bb,FN,sz,p(i).pFunc{:});
@@ -220,28 +222,28 @@ end
 
 function Is = computeSeqImg(I, Bb, Fn, sz, shrink,p)
 
+if(isempty(Fn)), Is= [{}]; return; end; 
 %compute the path for the images
-fnp = strsplit(Fn,'/'); fnp = fnp(end); fnp = strsplit(fnp, '_') ; 
-[tokens,~] = regexp(fnp(3),'I(\d+)\.jpg','tokens','match'); imgIdx = str2double(tokens{1});
-basePath = [p.imgBaseDir '/images' '/' fnp(1) '/' fnp(2) '/']; 
+fnp = strsplit(Fn,'\'); fnp = fnp(end); fnp = strsplit(fnp{:}, '_') ; 
+[tokens,~] = regexp(fnp(3),'I(\d+)\.jpg','tokens','match'); imgIdx = str2double(tokens{1}{:});
+basePath = strcat(p.imgBaseDir, '/images', '/', fnp(1), '/', fnp(2), '/');
 
 %fill the list of images
-Is = cell(1,p.span + 1); imgFn = [basePath fnp(:)]; Is{1} = imread(imgFn);
-for sp=2:(p.span+1)
-    imgIdx=imgIdx-p.skip; imgFn = [basePath 'I' num2str( imgIdx, '%0.5d') '.jpg'];
-    if(exist(imgFn,'file')), Im = imread(imgFn); else break; end;
-    if(~isempty(Bb))
+Is = cell(1,p.span + 1);
+for sp=0:(p.span)
+    idx=imgIdx - (sp * p.skip); imgFn = strcat(basePath, 'I', num2str( idx, '%0.5d'), '.jpg');
+    imgFn = imgFn{:}; if(exist(imgFn,'file')), Im = imread(imgFn); else Im = []; end;
+    if(~isempty(Bb) && ~isempty(Im))
         % grow bbs to a large padded size and crop windows
         modelDsBig=max(8*shrink,p.modelDsPad)+max(2,ceil(64/shrink))*shrink;
-        r=p.modelDs(2)/p.modelDs(1); assert(all(abs(Bb(1,3)./Bb(1,4)-r)<1e-5));
-        r=modelDsBig./p.modelDs; Bb=bbApply('resize',Bb,r(1),r(2));
+        %r=p.modelDs(2)/p.modelDs(1); assert(all(abs(Bb(1,3)./Bb(1,4)-r)<1e-5));
+        %r=modelDsBig./p.modelDs; Bb=bbApply('resize',Bb,r(1),r(2));
         Ws=bbApply('crop',Im,Bb,'replicate',modelDsBig([2 1])); Im = Ws{1};        
     end;
     %compute other scale
-    if(~isempty(sz)), Im = imResampleMex(Im,sz(1),sz(2),1); end;
-    Is{sp} = Im;
+    if(~isempty(sz) && ~isempty(Im)), Im = imResampleMex(Im,sz(1),sz(2),1); end;
+    Is{sp+1} = Im;
 end;
-Is = [Is{:}];
 end
 
 

@@ -43,14 +43,51 @@ opts.pPyramid.nPerOct = 8;
 opts.pPyramid.pChns.pCustom=struct('name','hogentropy','hFunc',@HOGEntropy); 
 opts.pPyramid.pChns.complete=0;
 
-%seq channel
-opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
-opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
-opts.pPyramid.pChns.pSeq = struct('name', 'seq', 'hFunc', @WSDST_MF,'pFunc',[16]);
+%% 
+%seq features -------------------------------------------------------------
+% %seq channel - weak stabilized
+% opts.pPyramid.pChns.pSeq = struct('name', 'WSSD', 'hFunc', @WSDST_MF);
+% opts.pPyramid.pChns.pSeq.pFunc = {16};
+% opts.pPyramid.pChns.pSeq.skip = 2; opts.pPyramid.pChns.pSeq.span = 8;
+% opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
+% opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
+% opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
+
+%seq channel - MBH
+opts.pPyramid.pChns.pSeq = struct('name', 'MBH', 'hFunc', @WSDST_MF);
+opts.pPyramid.pChns.pSeq.pFunc = {16};
 opts.pPyramid.pChns.pSeq.skip = 2; opts.pPyramid.pChns.pSeq.span = 8;
 opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
+opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
+opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
 
- 
+% %seq channel - IMHcd
+% opts.pPyramid.pChns.pSeq = struct('name', 'IMHcd', 'hFunc', @WSDST_MF);
+% opts.pPyramid.pChns.pSeq.pFunc = {16};
+% opts.pPyramid.pChns.pSeq.skip = 2; opts.pPyramid.pChns.pSeq.span = 8;
+% opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
+% opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
+% opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
+% 
+% %seq channel - IMHmd
+% opts.pPyramid.pChns.pSeq = struct('name', 'IMHmd', 'hFunc', @WSDST_MF);
+% opts.pPyramid.pChns.pSeq.pFunc = {16};
+% opts.pPyramid.pChns.pSeq.skip = 2; opts.pPyramid.pChns.pSeq.span = 8;
+% opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
+% opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
+% opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
+% 
+% %seq channel - simple temporal difference
+% opts.pPyramid.pChns.pSeq = struct('name', 'STD', 'hFunc', @WSDST_MF);
+% opts.pPyramid.pChns.pSeq.pFunc = {16};
+% opts.pPyramid.pChns.pSeq.skip = 2; opts.pPyramid.pChns.pSeq.span = 8;
+% opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
+% opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
+% opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
+
+%-----------------------------------------------------------------------------------------
+%% 
+
 %training data parameters
 opts.posGtDir=[dataDir 'train/annotations']; 
 opts.posImgDir=[dataDir 'train/images']; 

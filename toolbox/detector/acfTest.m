@@ -61,6 +61,8 @@ figure(show); plotRoc([fp tp],'logx',1,'logy',1,'xLbl','fppi',...
   'lims',lims,'color','g','smooth',1,'fpTarget',ref);
 title(sprintf('log-average miss rate = %.2f%%',miss*100));
 savefig([name 'Roc'],show,'png');
-save([name 'RocData'],'fp','tp','miss','lims','ref');
+
+%save information about evaluation by me
+save([name 'EvalutionResult'],'fp','tp','miss','lims','ref','score','gt','dt');
 
 end
