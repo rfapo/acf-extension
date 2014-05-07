@@ -150,7 +150,7 @@ if( ~isfield(pChns,'complete') || pChns.complete~=1 || isempty(I) )
   for i=1:nseq, ps{i} = getPrmDflt( pChns.pSeq(i), {'enabled',1,...
       'name','REQ','hFunc','REQ','pFunc',{},'padWith',0,... 
       'span', 8, 'skip', 2, 'imgBaseDir','REQ', ... 
-      'modelDs', [], 'modelDsPad', [] }, 1 ); 
+      'modelDs', [], 'modelDsPad', [], 'chnDepth', 'REQ' }, 1 ); 
   end;
   if( nseq>0 ), pChns.pSeq=[ps{:}]; end
 end
@@ -194,10 +194,7 @@ for i=find( [p.enabled] )
   if(numel(varargin)>1 && ~isempty(varargin{2})), sz = varargin{2}; else sz = []; end; 
   Is = computeSeqImg(I,Bb,FN,sz,shrink,p);
   S=feval(p(i).hFunc,Is,p(i).pFunc{:});
-  if(isempty(S)), S = single.empty(0,0,p.span); end;
-  %TODO: add resize parameters varargin{2}
-  %TODO: add the handle for full image or windows (with bb or without bb)
-  %S=feval(p(i).hFunc,I,Bb,FN,sz,p(i).pFunc{:});
+  if(isempty(S)), S = single.empty(0,0,p.chnDepth); end;
   chns=addChn(chns,S,p(i).name,p(i),p(i).padWith,h,w);
 end
 
