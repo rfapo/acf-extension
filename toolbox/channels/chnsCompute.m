@@ -210,8 +210,10 @@ end
 function chns = addChn( chns, data, name, pChn, padWith, h, w )
 % Helper function to add a channel to chns.
 [h1,w1,~]=size(data);
-if(h1~=h || w1~=w), data=imResampleMex(data,h,w,1);
-  assert(all(mod([h1 w1]./[h w],1)==0)); end
+if(h1~=h || w1~=w)
+    data=imResampleMex(data,h,w,1);
+    %assert(all(mod([h1 w1]./[h w],1)==0)); 
+end;
 chns.data{end+1}=data; chns.nTypes=chns.nTypes+1;
 chns.info(end+1)=struct('name',name,'pChn',pChn,...
   'nChns',size(data,3),'padWith',padWith);

@@ -63,6 +63,6 @@ title(sprintf('log-average miss rate = %.2f%%',miss*100));
 savefig([name 'Roc'],show,'png');
 
 %save information about evaluation by me
-save([name 'EvalutionResult'],'fp','tp','miss','lims','ref','score','gt','dt');
+%save([name 'EvalutionResult'],'fp','tp','miss','lims','ref','score','gt','dt');
 
 end
