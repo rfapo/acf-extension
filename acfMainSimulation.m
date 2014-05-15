@@ -39,16 +39,16 @@ opts.pPyramid.smooth=.5;
 opts.pPyramid.pChns.pColor.smooth=0;
 opts.pPyramid.nPerOct = 8;
 
-%Custom channel
-opts.pPyramid.pChns.pCustom=struct('name','hogentropy','hFunc',@HOGEntropy); 
-opts.pPyramid.pChns.complete=0;
+% %Custom channel
+% opts.pPyramid.pChns.pCustom=struct('name','hogentropy','hFunc',@HOGEntropy); 
+% opts.pPyramid.pChns.complete=0;
 
 %% seq features-------------------------------------------------
 
 % %seq channel - weak stabilized
 % opts.pPyramid.pChns.pSeq = struct('name', 'WSSD', 'hFunc', @WSDST_MF);
 % opts.pPyramid.pChns.pSeq.pFunc = {16};
-% opts.pPyramid.pChns.pSeq.skip = 2; opts.pPyramid.pChns.pSeq.span = 8;
+% opts.pPyramid.pChns.pSeq.skip = 4; opts.pPyramid.pChns.pSeq.span = 8;
 % opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
 % opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
 % opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
@@ -63,14 +63,14 @@ opts.pPyramid.pChns.complete=0;
 % opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
 % opts.pPyramid.pChns.pSeq.chnDepth = 12 * opts.pPyramid.pChns.pSeq.span;
 
-%seq channel - IMHcd
-opts.pPyramid.pChns.pSeq = struct('name', 'IMHcd', 'hFunc', @IMHcd_MF);
-opts.pPyramid.pChns.pSeq.pFunc = {[2, 2, 3e-6]};
-opts.pPyramid.pChns.pSeq.skip = 1; opts.pPyramid.pChns.pSeq.span = 1;
-opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
-opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
-opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
-opts.pPyramid.pChns.pSeq.chnDepth = 6 * opts.pPyramid.pChns.pSeq.span;
+% %seq channel - IMHcd
+% opts.pPyramid.pChns.pSeq = struct('name', 'IMHcd', 'hFunc', @IMHcd_MF);
+% opts.pPyramid.pChns.pSeq.pFunc = {[2, 2, 3e-6]};
+% opts.pPyramid.pChns.pSeq.skip = 1; opts.pPyramid.pChns.pSeq.span = 1;
+% opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
+% opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
+% opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
+% opts.pPyramid.pChns.pSeq.chnDepth = 6 *  opts.pPyramid.pChns.pSeq.span;
 
 
 %-----------------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ opts.name='models/AcfCaltech';
 pLoad={'lbls',{'person'},'ilbls',{'people'},'squarify',{3,.41}};
 opts.pLoad = [pLoad 'hRng',[50 inf], 'vRng',[0.65 1] ];
 opts.pJitter = {[]};
-opts.winsSave = 1;
+opts.winsSave = 0;
 
 %% train detector (see acfTrain)
 detector = acfTrain( opts );
