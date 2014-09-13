@@ -40,39 +40,39 @@ for nfold = 1:folds
     opts.pPyramid.pChns.pColor.smooth=0;
     opts.pPyramid.nPerOct = 8;
     
-    % %Custom channel
-    % opts.pPyramid.pChns.pCustom=struct('name','hogentropy','hFunc',@HOGEntropy);
-    % opts.pPyramid.pChns.complete=0;
-    
+%     %Custom channel
+%     opts.pPyramid.pChns.pCustom=struct('name','hogentropy','hFunc',@HOGEntropy);
+     opts.pPyramid.pChns.complete=0;
+%     
     %% seq features-------------------------------------------------
     
-    % %seq channel - weak stabilized
-    % opts.pPyramid.pChns.pSeq = struct('name', 'WSSD', 'hFunc', @WSDST_MF);
-    % opts.pPyramid.pChns.pSeq.pFunc = {16};
-    % opts.pPyramid.pChns.pSeq.skip = 4; opts.pPyramid.pChns.pSeq.span = 8;
-    % opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
-    % opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
-    % opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
-    % opts.pPyramid.pChns.pSeq.chnDepth = opts.pPyramid.pChns.pSeq.span;
+    %seq channel - weak stabilized
+    opts.pPyramid.pChns.pSeq = struct('name', 'WSSD', 'hFunc', @WSDST_MF);
+    opts.pPyramid.pChns.pSeq.pFunc = {16};
+    opts.pPyramid.pChns.pSeq.skip = 4; opts.pPyramid.pChns.pSeq.span = 8;
+    opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
+    opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
+    opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
+    opts.pPyramid.pChns.pSeq.chnDepth = opts.pPyramid.pChns.pSeq.span;
     
-    % %seq channel - MBH
-    % opts.pPyramid.pChns.pSeq = struct('name', 'MBH', 'hFunc', @MBH_MF);
-    % opts.pPyramid.pChns.pSeq.pFunc = {[2, 2, 3e-6]};
-    % opts.pPyramid.pChns.pSeq.skip = 1; opts.pPyramid.pChns.pSeq.span = 1;
-    % opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
-    % opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
-    % opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
-    % opts.pPyramid.pChns.pSeq.chnDepth = 12 * opts.pPyramid.pChns.pSeq.span;
+%     %seq channel - MBH
+%     opts.pPyramid.pChns.pSeq = struct('name', 'MBH', 'hFunc', @MBH_MF);
+%     opts.pPyramid.pChns.pSeq.pFunc = {[2, 2, 3e-6]};
+%     opts.pPyramid.pChns.pSeq.skip = 1; opts.pPyramid.pChns.pSeq.span = 1;
+%     opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
+%     opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
+%     opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
+%     opts.pPyramid.pChns.pSeq.chnDepth = 12 * opts.pPyramid.pChns.pSeq.span;
     
-    % %seq channel - IMHcd
-    % opts.pPyramid.pChns.pSeq = struct('name', 'IMHcd', 'hFunc', @IMHcd_MF);
-    % opts.pPyramid.pChns.pSeq.pFunc = {[2, 2, 3e-6]};
-    % opts.pPyramid.pChns.pSeq.skip = 1; opts.pPyramid.pChns.pSeq.span = 1;
-    % opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
-    % opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
-    % opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
-    % opts.pPyramid.pChns.pSeq.chnDepth = 6 *  opts.pPyramid.pChns.pSeq.span;
-    
+%     %seq channel - IMHcd
+%     opts.pPyramid.pChns.pSeq = struct('name', 'IMHcd', 'hFunc', @IMHcd_MF);
+%     opts.pPyramid.pChns.pSeq.pFunc = {[2, 2, 3e-6]};
+%     opts.pPyramid.pChns.pSeq.skip = 1; opts.pPyramid.pChns.pSeq.span = 1;
+%     opts.pPyramid.pChns.pSeq.imgBaseDir = 'C:/Users/RFSC/Documents/Development Files/MatlabWorkspace/ acf-extension/data/data_feat_test';
+%     opts.pPyramid.pChns.pSeq.modelDs =  opts.modelDs;
+%     opts.pPyramid.pChns.pSeq.modelDsPad = opts.modelDsPad;
+%     opts.pPyramid.pChns.pSeq.chnDepth = 6 *  opts.pPyramid.pChns.pSeq.span;
+%     
     
     %-----------------------------------------------------------------------------------------
     %%
@@ -102,7 +102,7 @@ for nfold = 1:folds
         'vRng',[.65 1],'xRng',[5 635],'yRng',[5 475]],'show',2);
     
     save([opts.name 'EvalutionResult'],'miss','roc','gt','dt'); 
-    clear opts detector missroc gt dt;
+    clear opts detector miss roc gt dt;
     
     fprintf([repmat('-',[1 75]) '\n']);
     fprintf('simulation with fold %i finished >>>>\n',nfold);
